@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feedback Revizie – WinDoors Automatic</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#D0C9BD;
+  --surface:#fff;
+  --ink:#1A1A1A;
+  --muted:#6B6760;
+  --accent:#2D5BE3;
+  --accent-l:#EEF2FD;
+  --border:#C4BDB1;
+  --green:#1A7A4A;
+  --green-l:#EDFAF3;
+  --green-b:#2DBF76;
+  --warn:#C84B11;
+  --warn-l:#FEF0EA;
+  --r:12px;
+  --sh:0 2px 20px rgba(0,0,0,.10);
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+
+/* HEADER */
+.header{
+  background:linear-gradient(135deg,#0D1B2A 0%,#1B2E4B 40%,#1A3A5C 70%,#0F2744 100%);
+  color:#fff;padding:32px 32px 40px;position:relative;overflow:hidden;min-height:230px;
+}
+.hgfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.header::before{content:'';position:absolute;top:-80px;right:-80px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(45,91,227,.25) 0%,transparent 70%);animation:drift 8s ease-in-out infinite alternate}
+.header::after{content:'';position:absolute;bottom:-60px;left:30%;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(0,180,160,.15) 0%,transparent 70%);animation:drift 11s ease-in-out infinite alternate-reverse}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(20px,-20px)}}
+.h-company{position:relative;z-index:2;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:rgba(255,255,255,.92);margin-bottom:22px}
+.h-tag{position:relative;z-index:2;font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:10px}
+.header h1{position:relative;z-index:2;font-family:'Syne',sans-serif;font-size:clamp(22px,5vw,34px);font-weight:800;line-height:1.1;margin-bottom:12px}
+.header p{position:relative;z-index:2;font-size:14px;color:rgba(255,255,255,.55);line-height:1.7;max-width:480px}
+.h-meta{position:relative;z-index:2;display:flex;gap:20px;margin-top:20px;flex-wrap:wrap}
+.h-pill{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.38)}
+
+/* PROGRESS */
+.pbar{background:#B8B0A4;height:7px;position:sticky;top:0;z-index:100}
+.pfill{height:100%;background:linear-gradient(90deg,var(--green),var(--green-b));width:0%;transition:width .4s ease}
+
+/* MAIN */
+.main{max-width:680px;margin:0 auto;padding:28px 20px 80px;display:flex;flex-direction:column;gap:12px}
+
+/* INTRO CARD */
+.intro-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);padding:24px;opacity:0;transform:translateY(12px);animation:fadeUp .4s ease .05s forwards}
+.intro-card h3{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:16px;color:var(--ink)}
+.intro-fields{display:flex;flex-direction:column;gap:10px}
+@media(min-width:480px){.intro-fields{flex-direction:row}}
+.field-wrap{flex:1;display:flex;flex-direction:column;gap:6px}
+.field-label{font-size:12px;color:var(--muted);font-weight:500}
+
+/* CATEGORY */
+.cat{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);overflow:hidden;opacity:0;transform:translateY(12px);animation:fadeUp .4s ease forwards}
+.cat:nth-child(2){animation-delay:.08s}.cat:nth-child(3){animation-delay:.12s}.cat:nth-child(4){animation-delay:.16s}
+.cat:nth-child(5){animation-delay:.20s}.cat:nth-child(6){animation-delay:.24s}.cat:nth-child(7){animation-delay:.28s}.cat:nth-child(8){animation-delay:.32s}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+
+.cat-hd{display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:1px solid transparent;transition:border-color .2s}
+.cat.active .cat-hd{border-bottom-color:var(--border)}
+.cat-num{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent);background:var(--accent-l);padding:3px 7px;border-radius:4px;white-space:nowrap}
+.cat-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex:1}
+.cat-st{font-size:12px;color:var(--muted);white-space:nowrap}
+.cat-st.done{color:var(--green);font-weight:600}
+
+.cat-body{display:none;padding:22px 22px 26px;flex-direction:column}
+.cat.active .cat-body{display:flex}
+
+/* QUESTION */
+.qw{display:none;flex-direction:column;gap:11px;animation:fadeUp .25s ease}
+.qw.visible{display:flex}
+.ql{font-size:14px;font-weight:500;line-height:1.5}
+.ql .req{color:var(--warn);margin-left:3px}
+
+/* NAV */
+.qnav{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+.btn-n,.btn-p{padding:9px 18px;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
+.btn-n{background:var(--accent);color:#fff}.btn-n:hover{background:#1E47CC}
+.btn-p{background:transparent;color:var(--muted);border:1.5px solid var(--border)}.btn-p:hover{border-color:var(--muted);color:var(--ink)}
+
+/* STARS */
+.stars{display:flex;flex-direction:row-reverse;justify-content:flex-end;gap:3px}
+.stars input{display:none}
+.stars label{font-size:28px;cursor:pointer;color:#D4CFC8;transition:color .15s,transform .15s;line-height:1}
+.stars label:hover,.stars label:hover~label,.stars input:checked~label{color:#F5A623}
+.stars input:checked+label{color:#F5A623;transform:scale(1.15)}
+.star-hint{font-size:11px;color:var(--muted)}
+
+/* OPTIONS */
+.opts{display:flex;flex-direction:column;gap:7px}
+.opt{display:flex;align-items:center;gap:11px;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s;font-size:14px}
+.opt:hover{border-color:var(--accent);background:var(--accent-l)}
+.opt input{display:none}
+.rdot{width:17px;height:17px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.opt.sel{border-color:var(--accent);background:var(--accent-l)}
+.opt.sel .rdot{border-color:var(--accent);background:var(--accent)}
+.opt.sel .rdot::after{content:'';width:5px;height:5px;border-radius:50%;background:#fff}
+
+/* SCALE */
+.scale{display:flex;gap:7px;flex-wrap:wrap}
+.sb{width:46px;height:46px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;color:var(--muted)}
+.sb:hover{border-color:var(--accent);color:var(--accent)}
+.sb.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.slabels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:3px}
+
+/* NPS */
+.nps{display:flex;gap:5px;flex-wrap:wrap}
+.nb{width:42px;height:42px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;color:var(--muted)}
+.nb:hover{border-color:var(--accent);color:var(--accent)}
+.nb.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* FOLLOWUP */
+.fup{display:none;padding:13px 15px;background:var(--warn-l);border:1px solid #F5C5A8;border-radius:8px}
+.fup.on{display:block}
+.fup p{font-size:13px;color:var(--warn);font-weight:500;margin-bottom:9px;line-height:1.5}
+
+/* INPUTS */
+.ti,.ta{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);background:#fff;transition:border-color .15s;outline:none}
+.ti:focus,.ta:focus{border-color:var(--accent)}
+.ta{min-height:80px;resize:vertical;line-height:1.6}
+
+/* DIVIDER */
+.qdiv{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+/* GOOGLE */
+.gsec{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:26px;box-shadow:var(--sh);text-align:center;opacity:0;transform:translateY(12px);animation:fadeUp .4s ease .34s forwards}
+.gsec h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:8px}
+.gsec p{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;max-width:400px;margin-left:auto;margin-right:auto}
+.gbtn{display:inline-flex;align-items:center;gap:7px;background:#4285F4;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;transition:background .15s,transform .15s}
+.gbtn:hover{background:#3367D6;transform:translateY(-1px)}
+
+/* SUBMIT */
+.subb{opacity:0;transform:translateY(12px);animation:fadeUp .4s ease .38s forwards}
+.sub-btn{width:100%;padding:17px;background:var(--ink);color:#fff;border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s,transform .15s}
+.sub-btn:hover{background:var(--accent);transform:translateY(-1px)}
+.sub-note{text-align:center;font-size:12px;color:var(--muted);margin-top:9px}
+
+/* ═══ CLOSING PAGE ═══ */
+.closing{display:none;min-height:100vh;flex-direction:column}
+.closing.on{display:flex}
+
+.cl-header{
+  background:linear-gradient(135deg,#0D1B2A 0%,#1B2E4B 40%,#1A3A5C 70%,#0F2744 100%);
+  padding:32px 32px 40px;position:relative;overflow:hidden;
+}
+.cl-header-inner{max-width:680px;margin:0 auto;position:relative;z-index:2}
+.cl-header .h-company{margin-bottom:0}
+
+.cl-body{
+  flex:1;
+  background:var(--bg);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:60px 20px;
+}
+.cl-card{
+  background:var(--surface);
+  border-radius:20px;
+  border:1px solid var(--border);
+  box-shadow:0 8px 40px rgba(0,0,0,.12);
+  max-width:560px;
+  width:100%;
+  padding:48px 40px;
+  text-align:center;
+  animation:fadeUp .5s ease;
+}
+.cl-check{
+  width:64px;height:64px;
+  background:var(--green-l);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 28px;
+  border:2px solid rgba(26,122,74,.2);
+}
+.cl-check svg{width:28px;height:28px;stroke:var(--green);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.cl-card h2{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(20px,4vw,26px);
+  font-weight:800;
+  color:var(--ink);
+  margin-bottom:16px;
+  line-height:1.2;
+}
+.cl-card p{
+  font-size:14px;
+  color:var(--muted);
+  line-height:1.8;
+  margin-bottom:8px;
+}
+.cl-divider{width:40px;height:3px;background:var(--green);border-radius:2px;margin:24px auto}
+.cl-contacts{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px}
+.cl-contact-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 22px;border-radius:10px;
+  border:2px solid var(--border);
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  color:var(--ink);text-decoration:none;
+  background:#fff;
+  transition:all .15s;
+}
+.cl-contact-btn:hover{border-color:var(--green);color:var(--green);transform:translateY(-1px)}
+.cl-contact-btn.primary{background:var(--green);color:#fff;border-color:var(--green)}
+.cl-contact-btn.primary:hover{background:#15693E;color:#fff}
+.cl-footer{
+  text-align:center;
+  padding:20px;
+  font-size:12px;
+  color:var(--muted);
+  background:var(--bg);
+}
+
+@media(max-width:480px){
+  .cl-card{padding:32px 22px}
+  .cat-body{padding:16px 15px 20px}
+  .sb{width:40px;height:40px;font-size:13px}
+  .nb{width:36px;height:36px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ FORM PAGE ═══════════════ -->
+<div id="formPage">
+
+<div class="header">
+  <svg class="hgfx" viewBox="0 0 800 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <line x1="0" y1="60" x2="800" y2="60" stroke="white" stroke-opacity="0.04" stroke-width="1"/>
+    <line x1="0" y1="130" x2="800" y2="130" stroke="white" stroke-opacity="0.04" stroke-width="1"/>
+    <line x1="0" y1="200" x2="800" y2="200" stroke="white" stroke-opacity="0.04" stroke-width="1"/>
+    <line x1="160" y1="0" x2="160" y2="240" stroke="white" stroke-opacity="0.03" stroke-width="1"/>
+    <line x1="320" y1="0" x2="320" y2="240" stroke="white" stroke-opacity="0.03" stroke-width="1"/>
+    <line x1="480" y1="0" x2="480" y2="240" stroke="white" stroke-opacity="0.03" stroke-width="1"/>
+    <line x1="640" y1="0" x2="640" y2="240" stroke="white" stroke-opacity="0.03" stroke-width="1"/>
+    <circle cx="690" cy="45" r="95" fill="none" stroke="#2D5BE3" stroke-opacity="0.13" stroke-width="1.5"/>
+    <circle cx="690" cy="45" r="58" fill="none" stroke="#2D5BE3" stroke-opacity="0.08" stroke-width="1"/>
+    <circle cx="690" cy="45" r="24" fill="#2D5BE3" fill-opacity="0.07"/>
+    <polygon points="570,200 635,100 700,200" fill="none" stroke="white" stroke-opacity="0.05" stroke-width="1.5"/>
+    <line x1="400" y1="0" x2="760" y2="240" stroke="#00B4A0" stroke-opacity="0.07" stroke-width="1.5"/>
+    <circle cx="320" cy="80" r="2.5" fill="#00B4A0" fill-opacity="0.28"/>
+    <circle cx="480" cy="185" r="2" fill="#2D5BE3" fill-opacity="0.32"/>
+  </svg>
+  <div class="h-company">WinDoors Automatic</div>
+  <div class="h-tag">Servicii de mentenanță</div>
+  <h1>Cum a decurs revizia?</h1>
+  <p>Mulțumim că ați ales serviciile noastre. Feedback-ul dvs. ne ajută să menținem standardele echipei și să îmbunătățim experiența fiecărui client. Vă rugăm să răspundeți sincer — toate răspunsurile sunt confidențiale.</p>
+  <div class="h-meta">
+    <div class="h-pill"><span>⏱</span> 5–7 minute</div>
+    <div class="h-pill"><span>🔒</span> Confidențial</div>
+    <div class="h-pill"><span>📋</span> 7 secțiuni</div>
+  </div>
+</div>
+
+<div class="pbar"><div class="pfill" id="pfill"></div></div>
+
+<div class="main" id="formMain">
+
+  <!-- INTRO -->
+  <div class="intro-card">
+    <h3>Informații opționale</h3>
+    <div class="intro-fields">
+      <div class="field-wrap">
+        <div class="field-label">Email (opțional)</div>
+        <input type="email" class="ti" id="f-email" placeholder="adresa@email.ro">
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">Locație / Obiectiv (opțional)</div>
+        <input type="text" class="ti" id="f-location" placeholder="Ex: Str. Exemplu 12, București">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CAT 1: Programare & Sosire ══ -->
+  <div class="cat active" id="cat-1">
+    <div class="cat-hd">
+      <div class="cat-num">01</div>
+      <div class="cat-title">Programare & Sosire</div>
+      <div class="cat-st" id="st-1"></div>
+    </div>
+    <div class="cat-body">
+
+      <div class="qw visible" id="q-1-1">
+        <div class="ql">1.1. Cât de ușor a fost să programați revizia / intervenția?<span class="req">*</span></div>
+        <div class="stars" id="sq11">
+          <input type="radio" name="q11" id="q11-5" value="5"><label for="q11-5">★</label>
+          <input type="radio" name="q11" id="q11-4" value="4"><label for="q11-4">★</label>
+          <input type="radio" name="q11" id="q11-3" value="3"><label for="q11-3">★</label>
+          <input type="radio" name="q11" id="q11-2" value="2"><label for="q11-2">★</label>
+          <input type="radio" name="q11" id="q11-1" value="1"><label for="q11-1">★</label>
+        </div>
+        <div class="star-hint">1 = Foarte dificil &nbsp;·&nbsp; 5 = Foarte ușor</div>
+        <div class="qnav"><button class="btn-n" onclick="goNext(1,1)">Următoarea →</button></div>
+      </div>
+
+      <div class="qw" id="q-1-2">
+        <div class="ql">1.2. Echipa tehnică s-a prezentat la lucrare la ora stabilită inițial?<span class="req">*</span></div>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q12" value="Da"><span class="rdot"></span>Da</label>
+          <label class="opt"><input type="radio" name="q12" value="Întârziere mică (sub 15 min)"><span class="rdot"></span>Întârziere mică (sub 15 min)</label>
+          <label class="opt"><input type="radio" name="q12" value="Întârziere semnificativă (15–60 min)"><span class="rdot"></span>Întârziere semnificativă (15–60 min)</label>
+          <label class="opt"><input type="radio" name="q12" value="Întârziere majoră (peste 60 min)"><span class="rdot"></span>Întârziere majoră (peste 60 min)</label>
+          <label class="opt"><input type="radio" name="q12" value="Nu au sosit / reprogramat fără preaviz"><span class="rdot"></span>Nu au sosit / reprogramat fără preaviz</label>
+        </div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(1,2)">← Înapoi</button>
+          <button class="btn-n" onclick="goNext(1,2)">Următoarea →</button>
+        </div>
+      </div>
+
+      <div class="qw" id="q-1-3">
+        <div class="ql">1.3. Ați fost anunțat în avans în cazul unei întârzieri?</div>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q13" value="Da"><span class="rdot"></span>Da</label>
+          <label class="opt"><input type="radio" name="q13" value="Nu"><span class="rdot"></span>Nu</label>
+          <label class="opt"><input type="radio" name="q13" value="Nu a fost cazul"><span class="rdot"></span>Nu a fost cazul</label>
+        </div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(1,3)">← Înapoi</button>
+          <button class="btn-n" onclick="finishCat(1)">Finalizează secțiunea ✓</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ CAT 2: Eficiență & Siguranță ══ -->
+  <div class="cat" id="cat-2">
+    <div class="cat-hd">
+      <div class="cat-num">02</div>
+      <div class="cat-title">Eficiență & Siguranță</div>
+      <div class="cat-st" id="st-2"></div>
+    </div>
+    <div class="cat-body">
+
+      <div class="qw visible" id="q-2-1">
+        <div class="ql">2.1. Durata lucrării a corespuns cu estimarea comunicată inițial?<span class="req">*</span></div>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q21" value="Da, conform estimării"><span class="rdot"></span>Da, conform estimării</label>
+          <label class="opt"><input type="radio" name="q21" value="Mai scurtă decât estimat"><span class="rdot"></span>Mai scurtă decât estimat</label>
+          <label class="opt"><input type="radio" name="q21" value="Ușor mai lungă, cu explicație"><span class="rdot"></span>Ușor mai lungă, cu explicație clară</label>
+          <label class="opt"><input type="radio" name="q21" value="Semnificativ mai lungă, fără explicație"><span class="rdot"></span>Semnificativ mai lungă, fără explicație</label>
+        </div>
+        <div class="qnav"><button class="btn-n" onclick="goNext(2,1)">Următoarea →</button></div>
+      </div>
+
+      <div class="qw" id="q-2-2">
+        <div class="ql">2.2. Echipa a lucrat organizat și eficient pe parcursul lucrării?<span class="req">*</span></div>
+        <div class="scale">
+          <button type="button" class="sb" data-q="q22" data-val="1">1</button>
+          <button type="button" class="sb" data-q="q22" data-val="2">2</button>
+          <button type="button" class="sb" data-q="q22" data-val="3">3</button>
+          <button type="button" class="sb" data-q="q22" data-val="4">4</button>
+          <button type="button" class="sb" data-q="q22" data-val="5">5</button>
+        </div>
+        <div class="slabels"><span>Deloc organizat</span><span>Complet eficient</span></div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(2,2)">← Înapoi</button>
+          <button class="btn-n" onclick="goNext(2,2)">Următoarea →</button>
+        </div>
+      </div>
+
+      <div class="qw" id="q-2-3">
+        <div class="ql">2.3. Echipa tehnică a respectat normele de protecția muncii și a minimizat expunerea la risc?<span class="req">*</span></div>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q23ssm" value="Da"><span class="rdot"></span>Da</label>
+          <label class="opt"><input type="radio" name="q23ssm" value="Parțial"><span class="rdot"></span>Parțial</label>
+          <label class="opt"><input type="radio" name="q23ssm" value="Nu"><span class="rdot"></span>Nu</label>
+        </div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(2,3)">← Înapoi</button>
+          <button class="btn-n" onclick="goNext(2,3)">Următoarea →</button>
+        </div>
+      </div>
+
+      <div class="qw" id="q-2-4">
+        <div class="ql">2.4. Zona de lucru a fost împrejmuită / semnalizată corespunzător pentru siguranța clienților și a personalului?<span class="req">*</span></div>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q24zona" value="Da"><span class="rdot"></span>Da</label>
+          <label class="opt"><input type="radio" name="q24zona" value="Parțial"><span class="rdot"></span>Parțial</label>
+          <label class="opt"><input type="radio" name="q24zona" value="Nu"><span class="rdot"></span>Nu</label>
+          <label class="opt"><input type="radio" name="q24zona" value="Nu a fost cazul"><span class="rdot"></span>Nu a fost cazul</label>
+        </div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(2,4)">← Înapoi</button>
+          <button class="btn-n" onclick="goNext(2,4)">Următoarea →</button>
+        </div>
+      </div>
+
+      <div class="qw" id="q-2-5">
+        <div class="ql">2.5. Au existat întreruperi, reveniri sau lucruri refăcute în timpul lucrării?</div>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q25int" value="Nu"><span class="rdot"></span>Nu</label>
+          <label class="opt"><input type="radio" name="q25int" value="Da"><span class="rdot"></span>Da</label>
+        </div>
+        <div class="fup" id="fup-q25">
+          <p>Vă rugăm descrieți pe scurt:</p>
+          <textarea class="ta" id="q25-detail" rows="3" placeholder="Ex: echipa a trebuit să revină a doua zi..."></textarea>
+        </div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(2,5)">← Înapoi</button>
+          <button class="btn-n" onclick="finishCat(2)">Finalizează secțiunea ✓</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ CAT 3: Echipament & Pregătire ══ -->
+  <div class="cat" id="cat-3">
+    <div class="cat-hd">
+      <div class="cat-num">03</div>
+      <div class="cat-title">Echipament & Pregătire tehnică</div>
+      <div class="cat-st" id="st-3"></div>
+    </div>
+    <div class="cat-body">
+
+      <div class="qw visible" id="q-3-1">
+        <div class="ql">3.1. Echipei tehnice i-a lipsit vreo sculă sau unealtă necesară?<span class="req">*</span></div>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q31scule" value="Nu"><span class="rdot"></span>Nu, au venit complet echipați</label>
+          <label class="opt"><input type="radio" name="q31scule" value="Da"><span class="rdot"></span>Da</label>
+        </div>
+        <div class="fup" id="fup-q31">
+          <p>Ce unealtă / sculă a lipsit?</p>
+          <input type="text" class="ti" id="q31-detail" placeholder="Menționați ce a lipsit...">
+        </div>
+        <div class="qnav"><button class="btn-n" onclick="goNext(3,1)">Următoarea →</button></div>
+      </div>
+
+      <div class="qw" id="q-3-2">
+        <div class="ql">3.2. Echipei tehnice i-a lipsit vreun consumabil (șuruburi, dibluri, cabluri etc.)?<span class="req">*</span></div>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q32cons" value="Nu"><span class="rdot"></span>Nu</label>
+          <label class="opt"><input type="radio" name="q32cons" value="Da"><span class="rdot"></span>Da</label>
+        </div>
+        <div class="fup" id="fup-q32">
+          <p>Ce consumabil a lipsit?</p>
+          <input type="text" class="ti" id="q32-detail" placeholder="Menționați ce a lipsit...">
+        </div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(3,2)">← Înapoi</button>
+          <button class="btn-n" onclick="goNext(3,2)">Următoarea →</button>
+        </div>
+      </div>
+
+      <div class="qw" id="q-3-3">
+        <div class="ql">3.3. Echipei tehnice i-a lipsit vreo componentă a produsului (piesă, accesoriu, element al automatizării)?<span class="req">*</span></div>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q33comp" value="Nu"><span class="rdot"></span>Nu</label>
+          <label class="opt"><input type="radio" name="q33comp" value="Da"><span class="rdot"></span>Da</label>
+        </div>
+        <div class="fup" id="fup-q33">
+          <p>Ce componentă a lipsit?</p>
+          <input type="text" class="ti" id="q33-detail" placeholder="Menționați ce a lipsit...">
+        </div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(3,3)">← Înapoi</button>
+          <button class="btn-n" onclick="goNext(3,3)">Următoarea →</button>
+        </div>
+      </div>
+
+      <div class="qw" id="q-3-4">
+        <div class="ql">3.4. Membrii echipei au demonstrat cunoștințe tehnice adecvate?<span class="req">*</span></div>
+        <div class="scale">
+          <button type="button" class="sb" data-q="q34preg" data-val="1">1</button>
+          <button type="button" class="sb" data-q="q34preg" data-val="2">2</button>
+          <button type="button" class="sb" data-q="q34preg" data-val="3">3</button>
+          <button type="button" class="sb" data-q="q34preg" data-val="4">4</button>
+          <button type="button" class="sb" data-q="q34preg" data-val="5">5</button>
+        </div>
+        <div class="slabels"><span>Nepregătiți</span><span>Foarte bine pregătiți</span></div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(3,4)">← Înapoi</button>
+          <button class="btn-n" onclick="finishCat(3)">Finalizează secțiunea ✓</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ CAT 4: Conduită & Prezentare ══ -->
+  <div class="cat" id="cat-4">
+    <div class="cat-hd">
+      <div class="cat-num">04</div>
+      <div class="cat-title">Conduită & Prezentare</div>
+      <div class="cat-st" id="st-4"></div>
+    </div>
+    <div class="cat-body">
+
+      <div class="qw visible" id="q-4-1">
+        <div class="ql">4.1. Echipa tehnică a purtat echipament corespunzător de lucru, cu sigla companiei, și s-a prezentat profesional?<span class="req">*</span></div>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q41prez" value="Da, complet profesional"><span class="rdot"></span>Da, complet profesional</label>
+          <label class="opt"><input type="radio" name="q41prez" value="Parțial"><span class="rdot"></span>Parțial</label>
+          <label class="opt"><input type="radio" name="q41prez" value="Nu"><span class="rdot"></span>Nu</label>
+        </div>
+        <div class="qnav"><button class="btn-n" onclick="goNext(4,1)">Următoarea →</button></div>
+      </div>
+
+      <div class="qw" id="q-4-2">
+        <div class="ql">4.2. Membrii echipei au fost respectuoși și curtenoși pe toată durata vizitei?<span class="req">*</span></div>
+        <div class="scale">
+          <button type="button" class="sb" data-q="q42cond" data-val="1">1</button>
+          <button type="button" class="sb" data-q="q42cond" data-val="2">2</button>
+          <button type="button" class="sb" data-q="q42cond" data-val="3">3</button>
+          <button type="button" class="sb" data-q="q42cond" data-val="4">4</button>
+          <button type="button" class="sb" data-q="q42cond" data-val="5">5</button>
+        </div>
+        <div class="slabels"><span>Deloc</span><span>Exemplar</span></div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(4,2)">← Înapoi</button>
+          <button class="btn-n" onclick="goNext(4,2)">Următoarea →</button>
+        </div>
+      </div>
+
+      <div class="qw" id="q-4-3">
+        <div class="ql">4.3. Spațiul a fost lăsat curat după finalizarea lucrării?<span class="req">*</span></div>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q43curat" value="Da, complet curat"><span class="rdot"></span>Da, complet curat</label>
+          <label class="opt"><input type="radio" name="q43curat" value="Parțial"><span class="rdot"></span>Parțial</label>
+          <label class="opt"><input type="radio" name="q43curat" value="Nu"><span class="rdot"></span>Nu</label>
+        </div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(4,3)">← Înapoi</button>
+          <button class="btn-n" onclick="finishCat(4)">Finalizează secțiunea ✓</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ CAT 5: Comunicare & Documente ══ -->
+  <div class="cat" id="cat-5">
+    <div class="cat-hd">
+      <div class="cat-num">05</div>
+      <div class="cat-title">Comunicare & Documente</div>
+      <div class="cat-st" id="st-5"></div>
+    </div>
+    <div class="cat-body">
+
+      <div class="qw visible" id="q-5-1">
+        <div class="ql">5.1. Vi s-a înmânat foaia de constatare completată, cu toate constatările trecute și semnată?<span class="req">*</span></div>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q51foaie" value="Da"><span class="rdot"></span>Da, am primit copia completată și semnată</label>
+          <label class="opt"><input type="radio" name="q51foaie" value="Nu"><span class="rdot"></span>Nu</label>
+        </div>
+        <div class="fup" id="fup-q51">
+          <p>⚠️ Ne pare rău pentru această omisiune. Lăsați datele de contact sau locația și vă vom transmite foaia imediat.</p>
+          <input type="text" class="ti" id="q51-contact" placeholder="Nume, telefon sau adresă locație...">
+        </div>
+        <div class="qnav"><button class="btn-n" onclick="goNext(5,1)">Următoarea →</button></div>
+      </div>
+
+      <div class="qw" id="q-5-2">
+        <div class="ql">5.2. Echipa v-a explicat ce a fost verificat și ce intervenții au fost efectuate?<span class="req">*</span></div>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q52expl" value="Da, în detaliu"><span class="rdot"></span>Da, în detaliu</label>
+          <label class="opt"><input type="radio" name="q52expl" value="Pe scurt"><span class="rdot"></span>Pe scurt</label>
+          <label class="opt"><input type="radio" name="q52expl" value="Deloc"><span class="rdot"></span>Deloc</label>
+        </div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(5,2)">← Înapoi</button>
+          <button class="btn-n" onclick="goNext(5,2)">Următoarea →</button>
+        </div>
+      </div>
+
+      <div class="qw" id="q-5-3">
+        <div class="ql">5.3. Ați primit recomandări clare pentru eventuale probleme sau lucrări viitoare?</div>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="q53rec" value="Da"><span class="rdot"></span>Da</label>
+          <label class="opt"><input type="radio" name="q53rec" value="Nu"><span class="rdot"></span>Nu</label>
+          <label class="opt"><input type="radio" name="q53rec" value="Nu era cazul"><span class="rdot"></span>Nu era cazul</label>
+        </div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(5,3)">← Înapoi</button>
+          <button class="btn-n" onclick="goNext(5,3)">Următoarea →</button>
+        </div>
+      </div>
+
+      <div class="qw" id="q-5-4">
+        <div class="ql">5.4. Ați simțit că puteți pune întrebări și că vi s-a răspuns onest?<span class="req">*</span></div>
+        <div class="scale">
+          <button type="button" class="sb" data-q="q54transp" data-val="1">1</button>
+          <button type="button" class="sb" data-q="q54transp" data-val="2">2</button>
+          <button type="button" class="sb" data-q="q54transp" data-val="3">3</button>
+          <button type="button" class="sb" data-q="q54transp" data-val="4">4</button>
+          <button type="button" class="sb" data-q="q54transp" data-val="5">5</button>
+        </div>
+        <div class="slabels"><span>Deloc</span><span>Complet transparent</span></div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(5,4)">← Înapoi</button>
+          <button class="btn-n" onclick="finishCat(5)">Finalizează secțiunea ✓</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ CAT 6: Satisfacție & Preț ══ -->
+  <div class="cat" id="cat-6">
+    <div class="cat-hd">
+      <div class="cat-num">06</div>
+      <div class="cat-title">Satisfacție & Raport calitate–preț</div>
+      <div class="cat-st" id="st-6"></div>
+    </div>
+    <div class="cat-body">
+
+      <div class="qw visible" id="q-6-1">
+        <div class="ql">6.1. Cât de mulțumit(ă) sunteți de lucrarea efectuată, în ansamblu?<span class="req">*</span></div>
+        <div class="scale">
+          <button type="button" class="sb" data-q="q61sat" data-val="1">1</button>
+          <button type="button" class="sb" data-q="q61sat" data-val="2">2</button>
+          <button type="button" class="sb" data-q="q61sat" data-val="3">3</button>
+          <button type="button" class="sb" data-q="q61sat" data-val="4">4</button>
+          <button type="button" class="sb" data-q="q61sat" data-val="5">5</button>
+        </div>
+        <div class="slabels"><span>Nesatisfăcut</span><span>Foarte mulțumit</span></div>
+        <div class="qnav"><button class="btn-n" onclick="goNext(6,1)">Următoarea →</button></div>
+      </div>
+
+      <div class="qw" id="q-6-2">
+        <div class="ql">6.2. Considerați că prețul și serviciile oferite sunt în concordanță cu calitatea lucrării?<span class="req">*</span></div>
+        <div class="scale">
+          <button type="button" class="sb" data-q="q62pret" data-val="1">1</button>
+          <button type="button" class="sb" data-q="q62pret" data-val="2">2</button>
+          <button type="button" class="sb" data-q="q62pret" data-val="3">3</button>
+          <button type="button" class="sb" data-q="q62pret" data-val="4">4</button>
+          <button type="button" class="sb" data-q="q62pret" data-val="5">5</button>
+        </div>
+        <div class="slabels"><span>Disproporționat</span><span>Excelent raport</span></div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(6,2)">← Înapoi</button>
+          <button class="btn-n" onclick="goNext(6,2)">Următoarea →</button>
+        </div>
+      </div>
+
+      <div class="qw" id="q-6-3">
+        <div class="ql">6.3. Ați recomanda serviciile noastre unui alt client sau unei alte locații?<span class="req">*</span></div>
+        <div class="nps">
+          <button type="button" class="nb" data-q="q63nps" data-val="1">1</button>
+          <button type="button" class="nb" data-q="q63nps" data-val="2">2</button>
+          <button type="button" class="nb" data-q="q63nps" data-val="3">3</button>
+          <button type="button" class="nb" data-q="q63nps" data-val="4">4</button>
+          <button type="button" class="nb" data-q="q63nps" data-val="5">5</button>
+          <button type="button" class="nb" data-q="q63nps" data-val="6">6</button>
+          <button type="button" class="nb" data-q="q63nps" data-val="7">7</button>
+          <button type="button" class="nb" data-q="q63nps" data-val="8">8</button>
+          <button type="button" class="nb" data-q="q63nps" data-val="9">9</button>
+          <button type="button" class="nb" data-q="q63nps" data-val="10">10</button>
+        </div>
+        <div class="slabels"><span>Cu siguranță nu</span><span>Cu siguranță da</span></div>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(6,3)">← Înapoi</button>
+          <button class="btn-n" onclick="goNext(6,3)">Următoarea →</button>
+        </div>
+      </div>
+
+      <div class="qw" id="q-6-4">
+        <div class="ql">6.4. Există ceva ce am fi putut face mai bine? Orice detaliu contează.</div>
+        <textarea class="ta" id="q64obs" rows="4" placeholder="Scrieți orice observație, sugestie sau apreciere..."></textarea>
+        <div class="qnav">
+          <button class="btn-p" onclick="goPrev(6,4)">← Înapoi</button>
+          <button class="btn-n" onclick="finishCat(6)">Finalizează secțiunea ✓</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- GOOGLE -->
+  <div class="gsec">
+    <div style="font-size:32px;margin-bottom:12px">📍</div>
+    <h3>Părerea dvs. contează și pentru alții</h3>
+    <p>Dacă doriți, puteți lăsa un review pe Google Maps — indiferent de experiența avută. Opiniile reale ne ajută să înțelegem unde ne situăm.</p>
+    <a href="https://www.google.com/maps/place/WinDoors+Automatic+s.r.l./@44.4417457,26.0448882,17z/data=!3m1!4b1!4m6!3m5!1s0x40b201c00dd2c35d:0x30fbbf49697d830d!8m2!3d44.4417457!4d26.0474631!16s%2Fg%2F1tsbkmqp?entry=ttu&g_ep=EgoyMDI2MDMzMC4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="gbtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      Scrieți un review pe Google Maps
+    </a>
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="subb">
+    <button class="sub-btn" onclick="submitForm()">Trimite feedback-ul →</button>
+    <p class="sub-note">Răspunsurile sunt confidențiale și sunt folosite exclusiv intern.</p>
+  </div>
+
+</div><!-- /formMain -->
+</div><!-- /formPage -->
+
+<!-- ═══════════════ CLOSING PAGE ═══════════════ -->
+<div class="closing" id="closingPage">
+
+  <div class="cl-header">
+    <svg class="hgfx" viewBox="0 0 800 140" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <line x1="0" y1="45" x2="800" y2="45" stroke="white" stroke-opacity="0.04" stroke-width="1"/>
+      <line x1="0" y1="100" x2="800" y2="100" stroke="white" stroke-opacity="0.04" stroke-width="1"/>
+      <line x1="200" y1="0" x2="200" y2="140" stroke="white" stroke-opacity="0.03" stroke-width="1"/>
+      <line x1="500" y1="0" x2="500" y2="140" stroke="white" stroke-opacity="0.03" stroke-width="1"/>
+      <circle cx="700" cy="30" r="80" fill="none" stroke="#2D5BE3" stroke-opacity="0.12" stroke-width="1.5"/>
+      <circle cx="700" cy="30" r="45" fill="#2D5BE3" fill-opacity="0.06"/>
+      <line x1="350" y1="0" x2="700" y2="140" stroke="#00B4A0" stroke-opacity="0.07" stroke-width="1.5"/>
+    </svg>
+    <div class="cl-header-inner">
+      <div class="h-company">WinDoors Automatic</div>
+    </div>
+  </div>
+
+  <div class="cl-body">
+    <div class="cl-card">
+      <div class="cl-check">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2>Feedback-ul dvs. a ajuns la noi.</h2>
+      <div class="cl-divider"></div>
+      <p>Echipa WinDoors Automatic vă mulțumește pentru câteva minute acordate acestui formular.</p>
+      <p>Fiecare răspuns contează — ne ajută să înțelegem ce funcționează bine și unde mai avem de lucru. Ne angajăm să analizăm cu seriozitate fiecare evaluare și să îmbunătățim continuu standardele echipei noastre.</p>
+      <p style="margin-top:8px">Dacă aveți o solicitare urgentă sau doriți să ne contactați direct, suntem disponibili.</p>
+      <div class="cl-contacts">
+        <a href="https://windoors.ro" target="_blank" class="cl-contact-btn primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          windoors.ro
+        </a>
+        <a href="tel:0213000753" class="cl-contact-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.9a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg>
+          0213 000 753
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="cl-footer">© WinDoors Automatic SRL · windoors.ro</div>
+
+</div><!-- /closingPage -->
+
+<script>
+// ── Config ────────────────────────────────────────
+const CAT_CONFIG = {
+  1: { qs: 3, req: ['q11','q12'] },
+  2: { qs: 5, req: ['q22','q23ssm','q24zona'] },
+  3: { qs: 4, req: ['q31scule','q32cons','q33comp','q34preg'] },
+  4: { qs: 3, req: ['q41prez','q42cond','q43curat'] },
+  5: { qs: 4, req: ['q51foaie','q52expl','q54transp'] },
+  6: { qs: 4, req: ['q61sat','q62pret','q63nps'] }
+};
+const ALL_REQ = ['q11','q12','q22','q23ssm','q24zona','q31scule','q32cons','q33comp','q34preg','q41prez','q42cond','q43curat','q51foaie','q52expl','q54transp','q61sat','q62pret','q63nps'];
+const ans = {};
+
+// ── Scale / NPS buttons ───────────────────────────
+document.querySelectorAll('.sb,.nb').forEach(btn => {
+  btn.addEventListener('click', function(){
+    const q = this.dataset.q;
+    document.querySelectorAll(`[data-q="${q}"]`).forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    ans[q] = this.dataset.val;
+    updateProgress();
+  });
+});
+
+// ── Radio ─────────────────────────────────────────
+document.querySelectorAll('.opt input[type="radio"]').forEach(r => {
+  r.addEventListener('change', function(){
+    const n = this.name;
+    document.querySelectorAll(`input[name="${n}"]`).forEach(x => x.closest('.opt').classList.remove('sel'));
+    this.closest('.opt').classList.add('sel');
+    ans[n] = this.value;
+    updateProgress();
+    // follow-ups
+    if(n==='q25int') document.getElementById('fup-q25').classList.toggle('on', this.value==='Da');
+    if(n==='q31scule') document.getElementById('fup-q31').classList.toggle('on', this.value==='Da');
+    if(n==='q32cons') document.getElementById('fup-q32').classList.toggle('on', this.value==='Da');
+    if(n==='q33comp') document.getElementById('fup-q33').classList.toggle('on', this.value==='Da');
+    if(n==='q51foaie') document.getElementById('fup-q51').classList.toggle('on', this.value==='Nu');
+  });
+});
+
+// ── Stars ─────────────────────────────────────────
+document.querySelectorAll('.stars input').forEach(r => {
+  r.addEventListener('change', function(){ ans[this.name]=this.value; updateProgress(); });
+});
+
+// ── Navigation ────────────────────────────────────
+function showQ(cat, q){
+  const body = document.querySelector(`#cat-${cat} .cat-body`);
+  body.querySelectorAll('.qw').forEach(w => w.classList.remove('visible'));
+  const t = document.getElementById(`q-${cat}-${q}`);
+  if(t){ t.classList.add('visible'); setTimeout(()=> t.scrollIntoView({behavior:'smooth',block:'nearest'}),50); }
+}
+
+function goNext(cat, cur){
+  const max = CAT_CONFIG[cat].qs;
+  if(cur < max) showQ(cat, cur+1);
+}
+function goPrev(cat, cur){
+  if(cur > 1) showQ(cat, cur-1);
+}
+
+// ── Finish category — validates required in cat ───
+function finishCat(cat){
+  const req = CAT_CONFIG[cat].req;
+  const missing = req.filter(q => !ans[q]);
+
+  if(missing.length > 0){
+    // find first missing question and show it
+    const firstMissing = missing[0];
+    const qEl = document.querySelector(`[name="${firstMissing}"], [data-q="${firstMissing}"]`);
+    if(qEl){
+      // find which question-wrap it's in
+      const qwrap = qEl.closest('.qw');
+      if(qwrap){
+        const qId = qwrap.id; // e.g. "q-2-3"
+        const parts = qId.split('-');
+        showQ(parseInt(parts[1]), parseInt(parts[2]));
+      }
+    }
+    showMissingAlert(missing.length);
+    return;
+  }
+
+  // close & mark done
+  const block = document.getElementById(`cat-${cat}`);
+  block.classList.remove('active');
+  const st = document.getElementById(`st-${cat}`);
+  st.textContent = '✓ Completat';
+  st.classList.add('done');
+
+  const next = cat + 1;
+  if(next <= 6){
+    const nb = document.getElementById(`cat-${next}`);
+    nb.classList.add('active');
+    setTimeout(()=> nb.scrollIntoView({behavior:'smooth',block:'start'}),100);
+  }
+  updateProgress();
+}
+
+function showMissingAlert(count){
+  const msg = count === 1
+    ? 'Mai este 1 întrebare obligatorie necompletată în această secțiune.'
+    : `Mai sunt ${count} întrebări obligatorii necompletate în această secțiune.`;
+  // simple non-blocking inline approach — brief flash on button
+  const btn = document.activeElement;
+  if(btn){ btn.textContent='⚠ Completați toate câmpurile'; setTimeout(()=>{ btn.textContent='Finalizează secțiunea ✓'; },2000); }
+}
+
+// ── Progress ──────────────────────────────────────
+function updateProgress(){
+  const done = ALL_REQ.filter(q => ans[q]).length;
+  document.getElementById('pfill').style.width = (done/ALL_REQ.length*100)+'%';
+}
+
+// ── Submit ────────────────────────────────────────
+function submitForm(){
+  const missing = ALL_REQ.filter(q => !ans[q]);
+  if(missing.length > 0){
+    alert(`Mai sunt ${missing.length} câmpuri obligatorii necompletate. Vă rugăm reveniți asupra secțiunilor anterioare.`);
+    return;
+  }
+
+  const data = {
+    timestamp: new Date().toISOString(),
+    email: document.getElementById('f-email').value || '',
+    locatie: document.getElementById('f-location').value || '',
+    ...ans,
+    q25_detail: document.getElementById('q25-detail')?.value||'',
+    q31_detail: document.getElementById('q31-detail')?.value||'',
+    q32_detail: document.getElementById('q32-detail')?.value||'',
+    q33_detail: document.getElementById('q33-detail')?.value||'',
+    q51_contact: document.getElementById('q51-contact')?.value||'',
+    q64_obs: document.getElementById('q64obs')?.value||''
+  };
+
+  const SHEETS_URL = 'YOUR_APPS_SCRIPT_URL';
+  fetch(SHEETS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).catch(()=>{});
+
+  // show closing page
+  document.getElementById('formPage').style.display = 'none';
+  document.getElementById('closingPage').classList.add('on');
+  document.getElementById('pfill').style.width = '100%';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
